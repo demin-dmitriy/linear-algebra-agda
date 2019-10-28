@@ -72,7 +72,7 @@ eₗ≈eᵣ {eₗ} {eᵣ} {_∙_} eₗ-is-left-identity eᵣ-is-right-identity
 
 open import Algebra.Structures _≈_ using (IsMonoid)
 
-module InverseDefinition {_∙_ e} (isMonoid : IsMonoid _∙_ e) where
+module [13-14] {_∙_ e} (isMonoid : IsMonoid _∙_ e) where
 
   open IsMonoid isMonoid
     using (assoc; identityˡ; identityʳ; ∙-cong; ∙-congˡ; ∙-congʳ)
@@ -96,10 +96,10 @@ module InverseDefinition {_∙_ e} (isMonoid : IsMonoid _∙_ e) where
       ∎
 
 -- 15.
--- We use left identity instead of identity (as in the book), because it's going to be useful
--- later.
+-- In the book e is identity. However left identity is enough. Moreover it's going to be useful
+-- later in (17).
 
-module Statement15
+module [15]
   {_∙_ e}
   (assoc : Associative _∙_)
   (∙-cong : Congruent₂ _∙_)
@@ -168,23 +168,20 @@ IsGroup′⇒IsGroup {_∙_} {eₗ} {_⁻¹ₗ} isGroup′ = record
   }
   where
     open IsGroup′ isGroup′
-    open Statement15 ∙-assoc ∙-cong identityₗ
+    open [15] ∙-assoc ∙-cong identityₗ
 
     inverseᵣ : RightInverse eₗ _⁻¹ₗ _∙_
     inverseᵣ x = if-yₗ∙x≈e-and-z∙yₗ≈e-then-x∙yₗ≈e (inverseₗ x) (inverseₗ (x ⁻¹ₗ))
 
     -- For some reason in the book it is ignored that this statement needs a proof.
-    -- Luckily it's easy to come up with a proof.
+    -- This seems like an oversight, but it's easy to come up with a proof by ourselves.
     eₗ≡eᵣ : RightIdentity eₗ _∙_
     eₗ≡eᵣ x =
       begin
-      x ∙ eₗ                   ≈⟨ ∙-congₗ (sym (identityₗ eₗ)) ⟩
-      x ∙ (eₗ ∙ eₗ)            ≈⟨ ∙-congₗ (∙-congₗ (sym (inverseₗ x))) ⟩
-      x ∙ (eₗ ∙ ((x ⁻¹ₗ) ∙ x)) ≈⟨ ∙-congₗ (sym (∙-assoc eₗ (x ⁻¹ₗ) x)) ⟩
-      x ∙ ((eₗ ∙ (x ⁻¹ₗ)) ∙ x) ≈⟨ ∙-congₗ (∙-congᵣ (identityₗ (x ⁻¹ₗ))) ⟩
-      x ∙ ((x ⁻¹ₗ) ∙ x)        ≈⟨ sym (∙-assoc x (x ⁻¹ₗ) x) ⟩
-      (x ∙ (x ⁻¹ₗ)) ∙ x        ≈⟨ ∙-congᵣ (inverseᵣ x) ⟩
-      eₗ ∙ x                   ≈⟨ identityₗ x ⟩
+      x ∙ eₗ            ≈⟨ ∙-congₗ (sym (inverseₗ x)) ⟩
+      x ∙ ((x ⁻¹ₗ) ∙ x) ≈⟨ sym (∙-assoc x (x ⁻¹ₗ) x)  ⟩
+      (x ∙ (x ⁻¹ₗ)) ∙ x ≈⟨ ∙-congᵣ (inverseᵣ x) ⟩
+      eₗ ∙ x            ≈⟨ identityₗ x ⟩
       x
       ∎
 
