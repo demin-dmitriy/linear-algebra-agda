@@ -189,3 +189,39 @@ IsGroup′⇒IsGroup {_∙_} {eₗ} {_⁻¹ₗ} isGroup′ = record
       ∎
 
 -- 18.
+
+-- TODO
+
+-- 19.
+open import Algebra.Structures _≈_ using (IsAbelianGroup)
+open import Algebra using (AbelianGroup)
+
+-- 20.
+
+-- TODO
+
+-- 21.
+
+-- TODO
+
+-- 22.
+open import Algebra.Structures _≈_ using (IsRing)
+open import Algebra using (Ring)
+
+-- 23.
+open import Algebra.Structures _≈_ using (IsCommutativeRing)
+open import Algebra using (CommutativeRing)
+
+-- TODO
+
+-- 24.
+
+-- TODO
+
+-- 25.
+
+-- TODO
+
+-- 26.
+
+-- TODO
