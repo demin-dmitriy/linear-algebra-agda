@@ -18,7 +18,7 @@ import Algebra.FunctionProperties _≈_ as Properties
 -- Section 1. Algebraic structures
 
 -- 1.
-open Properties using (Op₁; Op₂; Congruent₁; Congruent₂)
+open Properties using (Op₁; Op₂; Congruent₁; Congruent₂; LeftCongruent; RightCongruent)
 open import Algebra using (Magma)
 
 -- 2.
@@ -96,19 +96,30 @@ module InverseDefinition {_∙_ e} (isMonoid : IsMonoid _∙_ e) where
       ∎
 
 -- 15.
-  if-yₗ∙x≈e-and-z∙yₗ≈e-then-x∙yₗ≈e :
-    ∀ {yₗ x z} →
-    yₗ is-left-inverse-of x →
-    z is-left-inverse-of yₗ →
-    yₗ is-right-inverse-of x
+-- We use left identity instead of identity (as in the book), because it's going to be useful
+-- later.
+
+module Statement15
+  {_∙_ e}
+  (assoc : Associative _∙_)
+  (∙-cong : Congruent₂ _∙_)
+  (identityₗ : LeftIdentity e _∙_) where
+
+  ∙-congᵣ : RightCongruent _∙_
+  ∙-congᵣ = λ x → ∙-cong x refl
+
+  ∙-congₗ : LeftCongruent _∙_
+  ∙-congₗ = ∙-cong refl
+
+  if-yₗ∙x≈e-and-z∙yₗ≈e-then-x∙yₗ≈e : ∀ {yₗ x z} → yₗ ∙ x ≈ e → z ∙ yₗ ≈ e → x ∙ yₗ ≈ e
   if-yₗ∙x≈e-and-z∙yₗ≈e-then-x∙yₗ≈e {yₗ} {x} {z} yₗ∙x≈e z∙yₗ≈e
     = begin
-      x ∙ yₗ              ≈˘⟨ identityˡ (x ∙ yₗ) ⟩
-      e ∙ (x ∙ yₗ)        ≈⟨ ∙-congʳ (sym z∙yₗ≈e) ⟩
+      x ∙ yₗ              ≈˘⟨ identityₗ (x ∙ yₗ) ⟩
+      e ∙ (x ∙ yₗ)        ≈⟨ ∙-congᵣ (sym z∙yₗ≈e) ⟩
       (z ∙ yₗ) ∙ (x ∙ yₗ) ≈⟨ assoc z yₗ (x ∙ yₗ) ⟩
-      z ∙ (yₗ ∙ (x ∙ yₗ)) ≈⟨ ∙-congˡ (sym (assoc yₗ x yₗ)) ⟩
-      z ∙ ((yₗ ∙ x) ∙ yₗ) ≈⟨ ∙-congˡ (∙-congʳ yₗ∙x≈e) ⟩
-      z ∙ (e ∙ yₗ)        ≈⟨ ∙-congˡ (identityˡ yₗ) ⟩
+      z ∙ (yₗ ∙ (x ∙ yₗ)) ≈⟨ ∙-congₗ (sym (assoc yₗ x yₗ)) ⟩
+      z ∙ ((yₗ ∙ x) ∙ yₗ) ≈⟨ ∙-congₗ (∙-congᵣ yₗ∙x≈e) ⟩
+      z ∙ (e ∙ yₗ)        ≈⟨ ∙-congₗ (identityₗ yₗ) ⟩
       z ∙ yₗ              ≈⟨ z∙yₗ≈e ⟩
       e
       ∎
@@ -118,7 +129,8 @@ open import Algebra.Structures _≈_ using (IsGroup)
 open import Algebra using (Group)
 
 -- 17.
-open Properties using (LeftInverse)
+open Properties using (LeftInverse; RightInverse)
+open import Data.Product using(_,_)
 
 record IsGroup′ (_∙_ : Op₂ A) (eₗ : A) (_⁻¹ₗ : Op₁ A) : Set (α ⊔ ℓ) where
   field
@@ -141,9 +153,39 @@ IsGroup⇒IsGroup′ {_∙_} {e} {_⁻¹} isGroup = record
 
 IsGroup′⇒IsGroup : ∀ {_∙_ eₗ _⁻¹ₗ} → IsGroup′ _∙_ eₗ _⁻¹ₗ → IsGroup _∙_ eₗ _⁻¹ₗ
 IsGroup′⇒IsGroup {_∙_} {eₗ} {_⁻¹ₗ} isGroup′ = record
-  { isMonoid = {!!}
-  ; inverse = {!!}
-  ; ⁻¹-cong = {!!}
+  { isMonoid = record
+    { isSemigroup = record
+      { isMagma = record
+        { isEquivalence =  Setoid.isEquivalence setoid
+        ; ∙-cong =  ∙-cong
+        }
+      ; assoc = ∙-assoc
+      }
+    ; identity = identityₗ , eₗ≡eᵣ
+    }
+  ; inverse = inverseₗ , inverseᵣ
+  ; ⁻¹-cong = ⁻¹ₗ-cong
   }
-  where open IsGroup′ isGroup′
+  where
+    open IsGroup′ isGroup′
+    open Statement15 ∙-assoc ∙-cong identityₗ
 
+    inverseᵣ : RightInverse eₗ _⁻¹ₗ _∙_
+    inverseᵣ x = if-yₗ∙x≈e-and-z∙yₗ≈e-then-x∙yₗ≈e (inverseₗ x) (inverseₗ (x ⁻¹ₗ))
+
+    -- For some reason in the book it is ignored that this statement needs a proof.
+    -- Luckily it's easy to come up with a proof.
+    eₗ≡eᵣ : RightIdentity eₗ _∙_
+    eₗ≡eᵣ x =
+      begin
+      x ∙ eₗ                   ≈⟨ ∙-congₗ (sym (identityₗ eₗ)) ⟩
+      x ∙ (eₗ ∙ eₗ)            ≈⟨ ∙-congₗ (∙-congₗ (sym (inverseₗ x))) ⟩
+      x ∙ (eₗ ∙ ((x ⁻¹ₗ) ∙ x)) ≈⟨ ∙-congₗ (sym (∙-assoc eₗ (x ⁻¹ₗ) x)) ⟩
+      x ∙ ((eₗ ∙ (x ⁻¹ₗ)) ∙ x) ≈⟨ ∙-congₗ (∙-congᵣ (identityₗ (x ⁻¹ₗ))) ⟩
+      x ∙ ((x ⁻¹ₗ) ∙ x)        ≈⟨ sym (∙-assoc x (x ⁻¹ₗ) x) ⟩
+      (x ∙ (x ⁻¹ₗ)) ∙ x        ≈⟨ ∙-congᵣ (inverseᵣ x) ⟩
+      eₗ ∙ x                   ≈⟨ identityₗ x ⟩
+      x
+      ∎
+
+-- 18.
